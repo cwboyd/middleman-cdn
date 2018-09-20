@@ -16,7 +16,7 @@ describe Middleman::Cli::CDN do
       end
     end
 
-    context "with a cdn" do 
+    context "with a cdn" do
       it "should say" do
         described_class.say_status("the cdn", "a status")
       end
@@ -98,6 +98,44 @@ describe Middleman::Cli::CDN do
         expect_any_instance_of(::Middleman::Cli::CloudFlareCDN).to receive(:invalidate).with(options.cloudflare, ["/index.html", "/", "/blog/index.html", "/blog/", "/blog"], all: false)
         expect_any_instance_of(::Middleman::Cli::CloudFrontCDN).to receive(:invalidate).with(options.cloudfront, ["/index.html", "/", "/blog/index.html", "/blog/", "/blog"], all: false)
         expect_any_instance_of(::Middleman::Cli::FastlyCDN).to receive(:invalidate).with(options.cloudfront, ["/index.html", "/", "/blog/index.html", "/blog/", "/blog"], all: false)
+        subject.cdn_invalidate(options)
+      end
+    end
+
+    context "only some files matched from all because exclude" do
+      let(:options) do
+        OpenStruct.new({
+          cloudflare: {},
+          cloudfront: {},
+          fastly: {},
+          filter: /\.*/,
+          exclude: [/^blog/, /.png$/]
+        })
+      end
+
+      it "should invalidate the files with all cdns" do
+        expect_any_instance_of(::Middleman::Cli::CloudFlareCDN).to receive(:invalidate).with(options.cloudflare, ["/index.html", "/"], all: false)
+        expect_any_instance_of(::Middleman::Cli::CloudFrontCDN).to receive(:invalidate).with(options.cloudfront, ["/index.html", "/"], all: false)
+        expect_any_instance_of(::Middleman::Cli::FastlyCDN).to receive(:invalidate).with(options.cloudfront, ["/index.html", "/"], all: false)
+        subject.cdn_invalidate(options)
+      end
+    end
+
+    context "no files matched because exclude all" do
+      let(:options) do
+        OpenStruct.new({
+          cloudflare: {},
+          cloudfront: {},
+          fastly: {},
+          filter: /\.html$/,
+          exclude: [/.*/]
+        })
+      end
+
+      it "should invalidate the files with all cdns" do
+        expect_any_instance_of(::Middleman::Cli::CloudFlareCDN).to_not receive(:invalidate)
+        expect_any_instance_of(::Middleman::Cli::CloudFrontCDN).to_not receive(:invalidate)
+        expect_any_instance_of(::Middleman::Cli::FastlyCDN).to_not receive(:invalidate)
         subject.cdn_invalidate(options)
       end
     end

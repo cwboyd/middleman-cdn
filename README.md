@@ -12,7 +12,7 @@ on common Content Delivery Networks (CDNs).
   * [Fastly](https://fastly.com)
   * [Amazon CloudFront](https://aws.amazon.com/cloudfront/)
   * [Rackspace CloudFiles](http://www.rackspace.com/cloud/files/)
-* Select files for invalidation with regex.  
+* Select files for invalidation with regex.
 * Automatically invalidate after build.
 * Manually trigger invalidation with a single command on specific files.
 * Invalidating files only when they've changed [if you're using middleman-s3_sync](#invalidating-with-middleman-s3_sync).
@@ -21,12 +21,12 @@ on common Content Delivery Networks (CDNs).
 
 ## Installation
 
-Add this to your `Gemfile`:  
+Add this to your `Gemfile`:
 ```ruby
 gem "middleman-cdn"
 ```
 
-Then run:  
+Then run:
 ```
 bundle install
 ```
@@ -73,6 +73,9 @@ activate :cdn do |cdn|
   }
   cdn.filter            = /\.html/i # default /.*/
   cdn.after_build       = true      # default is false
+
+  # exclude .git repo and empty .keep files (default is empty Array, excluding nothing).
+  cdn.exclude           = [/^.git/, /.keep$/]
 end
 ```
 
@@ -80,7 +83,7 @@ end
 
 The `filter` parameter defines which files in your middleman `build` directory
 will be invalidated on the CDN. It must be a regular expression (use
-[rubular](http://rubular.com/) to test your regex).  
+[rubular](http://rubular.com/) to test your regex).
 
 Examples:
 
@@ -99,7 +102,14 @@ their respective `index.html` is included in the filter. Both the slashed and
 non-slashed version of the directory are invalidated. e.g. The file
 `/blog/index.html` will also invalidate `/blog/` and `/blog`.
 
-Alternatively: If you're using `middleman-s3_sync` you can hook middleman-cdn into 
+To permit interoperability with deploying your build directory with git (such as
+middleman-deploy does), an exclude operation is provided to allow a reduction in
+scope of the files specified by filter.  This configuration option is an Array of
+regular expressions (Regex) objects.  When expanding the files to invalid, if any
+of the filenames (without leading /) match any of the regular expressions, then
+that file is not validated.
+
+Alternatively: If you're using `middleman-s3_sync` you can hook middleman-cdn into
 it's build process. See the [instructions here](#invalidating-with-middleman-s3_sync).
 
 ### Configuration: CloudFlare
@@ -199,12 +209,12 @@ CLOUDFLARE_CLIENT_API_KEY= CLOUDFLARE_EMAIL= bundle exec middleman invalidate
 
 ## Invalidating
 
-Set `after_build` to `true` and the cache will be invalidated after build:  
+Set `after_build` to `true` and the cache will be invalidated after build:
 ```bash
 bundle exec middleman build
 ```
 
-Or, invalidate manually using:  
+Or, invalidate manually using:
 ```bash
 bundle exec middleman cdn
 ```
@@ -227,7 +237,7 @@ Also, make sure to remove `cdn.after_build = true` from your config, if it was t
 
 ## Example Usage
 
-I'm using middleman-cdn on my personal website [leighmcculloch.com](http://leighmcculloch.com) which is on [github](https://github.com/leighmcculloch/leighmcculloch.com) if you want to checkout how I deploy. It's configuration has all of the above CDNs in use for demonstration. I primarily use CloudFlare, and unlike the other CDNs, CloudFlare doesn't default to caching HTML. To make the most of CloudFlare, configure a PageRule that looks like this to tell CloudFlare to cache everything.  
+I'm using middleman-cdn on my personal website [leighmcculloch.com](http://leighmcculloch.com) which is on [github](https://github.com/leighmcculloch/leighmcculloch.com) if you want to checkout how I deploy. It's configuration has all of the above CDNs in use for demonstration. I primarily use CloudFlare, and unlike the other CDNs, CloudFlare doesn't default to caching HTML. To make the most of CloudFlare, configure a PageRule that looks like this to tell CloudFlare to cache everything.
 ![CloudFlare PageRule Example](README-cloudflare-pagerule-example.png)
 
 ## Thanks

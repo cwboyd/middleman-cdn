@@ -35,6 +35,7 @@ module Middleman
             return
           end
           options.filter ||= /.*/
+          options.exclude ||= Array.new
 
           if cdns.all? { |cdn| options.public_send(cdn.key.to_sym).nil? }
             self.class.say_status(nil, ANSI.red{ "Error: You must specify a config for one of the supported CDNs.\n#{example_configuration}" })
@@ -45,7 +46,7 @@ module Middleman
             files = normalize_files(files)
             message = "Invalidating #{files.count} files:"
           else
-            files = normalize_files(list_files(options.filter))
+            files = normalize_files(list_files(options.filter, options.exclude))
             message = "Invalidating #{files.count} files with filter: #{options.filter.source}"
           end
           self.class.say_status(nil, message)
@@ -98,6 +99,8 @@ activate :cdn do |cdn|
 #{cdns.map(&:example_configuration).join}
   cdn.filter            = /\.html/i  # default /.*/
   cdn.after_build       = true  # default is false
+  # exclude .git repo and empty .keep files (default is empty Array, excluding nothing).
+  cdn.exclude           = [/^.git/, /.keep$/]
 end
         TEXT
       end
@@ -106,7 +109,7 @@ end
         [".*", ".+"].include?(filter.source)
       end
 
-      def list_files(filter)
+      def list_files(filter, excludes)
         Dir.chdir('build/') do
           Dir.glob('**/*', File::FNM_DOTMATCH).tap do |files|
             # Remove directories
@@ -114,6 +117,11 @@ end
 
             # Remove files that do not match filter
             files.reject! { |f| f !~ filter }
+
+            # Remove files that match any of our exclude patterns
+            excludes.each do |exclude|
+               files.reject! { |f| exclude === f }
+            end
           end
         end
       end

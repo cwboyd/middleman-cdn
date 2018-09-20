@@ -10,6 +10,7 @@ module Middleman
       option :rackspace, nil, 'Rackspace options'
       option :filter, nil, 'Filter files to invalidate'
       option :after_build, false, 'Invalidate automatically after build'
+      option :exclude, Array.new, 'Array of regexs to exclude from files to invalidate'
 
       @@cdn_options = nil
 
