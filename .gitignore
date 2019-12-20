@@ -5,3 +5,5 @@ coverage
 *.gem
 pkg
 gemfiles/*.gemfile.lock
+*.sw?
+gemfiles/.bundle
